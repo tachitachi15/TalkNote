@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.yuki.talknote"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -63,5 +63,8 @@ dependencies {
 
     //RecyclerView
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
+
+    //ffmpeg
+    implementation 'com.arthenica:mobile-ffmpeg-full:4.2.2'
 
 }

@@ -1,5 +1,6 @@
 package com.yuki.talknote
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -46,11 +47,11 @@ class FirstFragment : Fragment() {
 
         val floatingActionButton = view.findViewById<FloatingActionButton>(R.id.fab)
         floatingActionButton.setOnClickListener{
-            addTalkViewModel = ViewModelProvider(this).get(AddTalkViewModel::class.java)
-            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
-            addTalkViewModel.insert(Talk(0,date,"test"))
-//            val intent = Intent(activity,TalkRecordActivity::class.java)
-//            startActivity(intent)
+//            addTalkViewModel = ViewModelProvider(this).get(AddTalkViewModel::class.java)
+//            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
+//            addTalkViewModel.insert(Talk(0,date,"test"))
+            val intent = Intent(activity,TalkRecordActivity::class.java)
+            startActivity(intent)
         }
     }
 }

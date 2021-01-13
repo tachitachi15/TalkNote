@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+    <component name="AndroidLayouts">
+        <shared>
+            <config />
+        </shared>
+    </component>
+    <component name="ChangeListManager">
+        <list
+            name="Default Changelist"
+            comment=""
+            default="true"
+            id="e389a0b5-ac7b-4ac4-af5a-c685ad90b86f" />
+        <option
+            name="SHOW_DIALOG"
+            value="false" />
+        <option
+            name="HIGHLIGHT_CONFLICTS"
+            value="true" />
+        <option
+            name="HIGHLIGHT_NON_ACTIVE_CHANGELIST"
+            value="false" />
+        <option
+            name="LAST_RESOLUTION"
+            value="IGNORE" />
+    </component>
+    <component
+        name="ExecutionTargetManager"
+        SELECTED_TARGET="Nexus_5X_API_30" />
+    <component name="ExternalProjectsData">
+        <projectState path="$PROJECT_DIR$">
+            <ProjectState />
+        </projectState>
+    </component>
+    <component name="ExternalProjectsManager">
+        <system id="GRADLE">
+            <state>
+                <projects_view />
+            </state>
+        </system>
+    </component>
+    <component
+        name="ProjectId"
+        id="1mK50DgTRZEHrgn7ZeaZ16um1fr" />
+    <component name="ProjectViewState">
+        <option
+            name="hideEmptyMiddlePackages"
+            value="true" />
+        <option
+            name="showExcludedFiles"
+            value="true" />
+        <option
+            name="showLibraryContents"
+            value="true" />
+    </component>
+    <component name="PropertiesComponent">
+        <property
+            name="DeviceAndSnapshotComboBoxAction.selectedDevice"
+            value="PGP7N17B14001181" />
+        <property
+            name="DeviceAndSnapshotComboBoxAction.selectionTime"
+            value="2021-01-03T09:07:56.083Z" />
+        <property
+            name="RunOnceActivity.ShowReadmeOnStart"
+            value="true" />
+        <property
+            name="android.sdk.path"
+            value="$USER_HOME$/AppData/Local/Android/Sdk" />
+        <property
+            name="project.structure.last.edited"
+            value="Modules" />
+
+        <property name="project.structure.pr"/>
+    </component>
+</project>

@@ -10,4 +10,8 @@ class TalkRepository(private val talkDao: TalkDao) {
     suspend fun insert(talk: Talk) {
         talkDao.insert(talk)
     }
+
+    suspend fun delete(talk: Talk) {
+        talkDao.delete(talk)
+    }
 }

@@ -12,7 +12,7 @@ import com.yuki.talkmemo.Talk
 
 class TalkListAdapter internal constructor(context: Context?) : RecyclerView.Adapter<TalkListAdapter.TalkViewHolder>() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
-    private var talks = emptyList<Talk>()
+    var talks = emptyList<Talk>()
 
     inner class TalkViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val keywordView: TextView = itemView.findViewById(R.id.textView)
@@ -25,7 +25,6 @@ class TalkListAdapter internal constructor(context: Context?) : RecyclerView.Ada
 
     override fun onBindViewHolder(holder: TalkViewHolder, position: Int) {
         val current = talks[position]
-        //holder.dateView.text = current.date
         holder.keywordView.text = current.keywords
         //ここで画面遷移を実装　
         holder.itemView.setOnClickListener(){

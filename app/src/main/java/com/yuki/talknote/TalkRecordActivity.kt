@@ -8,12 +8,19 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import com.arthenica.mobileffmpeg.FFmpeg
 import java.io.IOException
+import java.lang.NumberFormatException
+import java.util.*
+import kotlin.concurrent.schedule
 
 private const val LOG_TAG = "MainActivity"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
+
+private const val DELIMITER_MEAN_VOLUME = "mean_volume: "
+private const val DELIMITER_MAX_VOLUME = "max_volume: "
 
 class TalkRecordActivity : AppCompatActivity() {
     private var fileName: String = ""
@@ -64,9 +71,25 @@ class TalkRecordActivity : AppCompatActivity() {
     }
 
     private fun onRecord(start: Boolean) = if (start) {
+        Timer().schedule(30000){
+            stopRecording()
+        }
+
         startRecording()
     } else {
         stopRecording()
+    }
+
+    private fun getVolume(delimiter: String,output:String):Double?{
+        var volume: Double? = null
+        if(Regex(delimiter).containsMatchIn(output)) {
+            volume = try{
+                output.split(delimiter)[1].split(" ")[0].toDouble()
+            }catch (e: NumberFormatException){
+                null
+            }
+        }
+        return volume
     }
 
     private fun ffmpeg(filename:String):String{
@@ -85,22 +108,39 @@ class TalkRecordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_talk_record)
 
-        volumeControlStream = AudioManager.STREAM_MUSIC
+        //volumeControlStream = AudioManager.STREAM_MUSIC
         fileName = "${externalCacheDir?.absolutePath}/audiorecordtest"
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
         val recordButton = findViewById<Button>(R.id.button_record)
+        val ffmpegButton = findViewById<Button>(R.id.button_ffmpeg)
+        val textMaxVolume = findViewById<TextView>(R.id.text_maxvolume)
+        val textMeanVolume =  findViewById<TextView>(R.id.text_meanvolume)
         var mStartRecording = true
 
         recordButton.setOnClickListener{
+
             onRecord(mStartRecording)
             recordButton.text = when(mStartRecording){
                 true -> "Stop Recording"
                 false -> "Start Recording"
             }
             mStartRecording=!mStartRecording
-            ffmpeg(fileName)
+            //textFFmpeg.text = ffmpeg(fileName)
+        }
+
+        ffmpegButton.setOnClickListener{
+            if (fileName.isNotEmpty()) {
+                val output = ffmpeg(fileName)
+                val maxVolume = getVolume(DELIMITER_MAX_VOLUME, output)
+                val meanVolume = getVolume(DELIMITER_MEAN_VOLUME, output)
+
+                textMaxVolume.text = maxVolume.toString()
+                textMeanVolume.text = meanVolume.toString()
+            }else{
+                textMaxVolume.text = "file is not exist"
+            }
         }
 
     }

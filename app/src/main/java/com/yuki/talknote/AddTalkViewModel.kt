@@ -18,4 +18,8 @@ class AddTalkViewModel(application: Application): AndroidViewModel(application){
     fun insert(talk: Talk) = viewModelScope.launch(Dispatchers.IO) {
         repository.insert(talk)
     }
+
+    fun delete(talk: Talk) = viewModelScope.launch(Dispatchers.IO) {
+        repository.delete(talk)
+    }
 }

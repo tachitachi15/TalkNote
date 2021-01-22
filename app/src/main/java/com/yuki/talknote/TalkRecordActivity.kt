@@ -47,9 +47,9 @@ class TalkRecordActivity : AppCompatActivity() {
 
         recorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.DEFAULT)
+            setOutputFormat(MediaRecorder.OutputFormat.AMR_WB)
             setOutputFile(fileName)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
 
             try {
                 prepare()
@@ -71,10 +71,9 @@ class TalkRecordActivity : AppCompatActivity() {
     }
 
     private fun onRecord(start: Boolean) = if (start) {
-        Timer().schedule(30000){
-            stopRecording()
-        }
-
+//        Timer().schedule(30000){
+//            stopRecording()
+//        }
         startRecording()
     } else {
         stopRecording()
@@ -115,8 +114,11 @@ class TalkRecordActivity : AppCompatActivity() {
 
         val recordButton = findViewById<Button>(R.id.button_record)
         val ffmpegButton = findViewById<Button>(R.id.button_ffmpeg)
+        val recognizeButton = findViewById<Button>(R.id.button_recognize)
+
         val textMaxVolume = findViewById<TextView>(R.id.text_maxvolume)
         val textMeanVolume =  findViewById<TextView>(R.id.text_meanvolume)
+        val textRecognition = findViewById<TextView>(R.id.text_recognition)
         var mStartRecording = true
 
         recordButton.setOnClickListener{
@@ -141,6 +143,10 @@ class TalkRecordActivity : AppCompatActivity() {
             }else{
                 textMaxVolume.text = "file is not exist"
             }
+        }
+
+        recognizeButton.setOnClickListener{
+            textRecognition.text = SpeechToTextClient(fileName).recognitionStart().toString()
         }
 
     }

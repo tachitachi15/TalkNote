@@ -2,6 +2,7 @@ package com.yuki.talknote
 
 import android.util.Base64
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -10,36 +11,39 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import java.io.File
+import java.lang.StringBuilder
 import java.util.*
 
 
 class SpeechToTextClient(val filename: String) {
     private val url = "https://speech.googleapis.com/v1/speech:recognize"
     private val apiKey = ""
+    private lateinit var addTalkViewModel: AddTalkViewModel
 
-    fun recognitionStart() = runBlocking {
-        async(Dispatchers.Default){
-            OkHttpClient().newCall(createRequest(filename)).execute()
-        }.await().let { response ->
-            if (response.isSuccessful){
-                response.body()?.string().let { body->
-                    val recognitionResponse = Gson().fromJson(body,RecognitionResponse::class.java)
-                    val recognized = StringBuilder()
-                    for (rec in recognitionResponse.results){
-                        recognized.append(rec.alternatives[0].transcript)
+    fun recognitionStart():String{
+        val recognized = StringBuilder()
+        runBlocking {
+            async(Dispatchers.IO){
+                OkHttpClient().newCall(createRequest(filename)).execute()
+            }.await().let { response ->
+                if (response.isSuccessful){
+                    response.body()?.string().let { body->
+                        val recognitionResponse = Gson().fromJson(body,RecognitionResponse::class.java)
+
+                        recognitionResponse.results.forEach { result->
+                            recognized.append(result.alternatives[0].transcript)
+                        }
                     }
-                    recognized
                 }
             }
-            else{
-                "response is null"
-            }
         }
+        return recognized.toString()
     }
+
 
     private fun createRequest(filename: String) = Request.Builder()
         .url(url)
-        .addHeader("Authorization: Bearer", apiKey)
+        .addHeader("X-Goog-Api-Key", apiKey)
         .addHeader("Content-Type", "application/json; charset=utf-8")
         .post(createRequestBody(encodeToBase64(filename)))
         .build()
@@ -47,9 +51,9 @@ class SpeechToTextClient(val filename: String) {
     private fun createRequestBody(content: String): RequestBody {
         val requestParams = RequestParams(
             config = RecognitionConfig(
-                encoding = "AMR_WB",
-                sampleRateHertz = 16000,
-                languageCode = "en-JP"
+                encoding = "AMR",
+                sampleRateHertz = 8000,
+                languageCode = "ja-JP"
             ),
             audio = AudioData(
                 content = content
@@ -62,7 +66,7 @@ class SpeechToTextClient(val filename: String) {
         )
     }
 
-    private fun encodeToBase64(filename:String) = Base64.encodeToString(File(filename).inputStream().readBytes(),0) //ヘッダとか考慮する必要ありそう flag 0 ->default
+    private fun encodeToBase64(filename:String) = Base64.encodeToString(File(filename).inputStream().readBytes(),Base64.NO_WRAP)
 
     data class RequestParams(
         val config: RecognitionConfig,

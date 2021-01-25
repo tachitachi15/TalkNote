@@ -3,18 +3,26 @@ package com.yuki.talknote
 import android.Manifest
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModelProvider
 import com.arthenica.mobileffmpeg.FFmpeg
+import com.yuki.talkmemo.Talk
+import kotlinx.coroutines.runBlocking
+import java.io.File
 import java.io.IOException
 import java.lang.NumberFormatException
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.schedule
+import kotlin.concurrent.thread
 
 private const val LOG_TAG = "MainActivity"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
@@ -25,9 +33,12 @@ private const val DELIMITER_MAX_VOLUME = "max_volume: "
 class TalkRecordActivity : AppCompatActivity() {
     private var fileName: String = ""
     private var recorder: MediaRecorder? = null
+    private var player: MediaPlayer? = null
 
     private var permissionToRecordAccepted = false
     private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
+
+    private lateinit var addTalkViewModel: AddTalkViewModel
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -50,6 +61,7 @@ class TalkRecordActivity : AppCompatActivity() {
             setOutputFormat(MediaRecorder.OutputFormat.AMR_WB)
             setOutputFile(fileName)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
+            //setAudioSamplingRate(16000)
 
             try {
                 prepare()
@@ -77,6 +89,29 @@ class TalkRecordActivity : AppCompatActivity() {
         startRecording()
     } else {
         stopRecording()
+    }
+
+    private fun startPlaying() {
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(fileName)
+                prepare()
+                start()
+            } catch (e: IOException) {
+                Log.e(LOG_TAG, "prepare() failed")
+            }
+        }
+    }
+
+    private fun stopPlaying() {
+        player?.release()
+        player = null
+    }
+
+    private fun onPlay(start: Boolean) = if (start) {
+        startPlaying()
+    } else {
+        stopPlaying()
     }
 
     private fun getVolume(delimiter: String,output:String):Double?{
@@ -107,19 +142,30 @@ class TalkRecordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_talk_record)
 
-        //volumeControlStream = AudioManager.STREAM_MUSIC
-        fileName = "${externalCacheDir?.absolutePath}/audiorecordtest"
+        volumeControlStream = AudioManager.STREAM_MUSIC
+        fileName = "${externalCacheDir?.absolutePath}/audiorecordtest.awb"
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
         val recordButton = findViewById<Button>(R.id.button_record)
         val ffmpegButton = findViewById<Button>(R.id.button_ffmpeg)
         val recognizeButton = findViewById<Button>(R.id.button_recognize)
+        val playButton = findViewById<Button>(R.id.button_playing)
 
         val textMaxVolume = findViewById<TextView>(R.id.text_maxvolume)
         val textMeanVolume =  findViewById<TextView>(R.id.text_meanvolume)
         val textRecognition = findViewById<TextView>(R.id.text_recognition)
         var mStartRecording = true
+        var mStartPlaying = true
+
+        playButton.setOnClickListener{
+            onPlay(mStartPlaying)
+            playButton.text = when(mStartPlaying){
+                true -> "Stop"
+                false -> "Start"
+            }
+            mStartPlaying=!mStartPlaying
+        }
 
         recordButton.setOnClickListener{
 
@@ -146,7 +192,15 @@ class TalkRecordActivity : AppCompatActivity() {
         }
 
         recognizeButton.setOnClickListener{
-            textRecognition.text = SpeechToTextClient(fileName).recognitionStart().toString()
+            addTalkViewModel =  ViewModelProvider(this).get(AddTalkViewModel::class.java)
+            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
+//            SpeechToTextClient(fileName).recognitionStart()?.let{
+//                addTalkViewModel.insert(Talk(0,date,it))
+//            }
+            //mainスレッドで処理が重いと言われた
+            thread {
+                addTalkViewModel.insert(Talk(0,date,SpeechToTextClient(fileName).recognitionStart()))
+            }
         }
 
     }

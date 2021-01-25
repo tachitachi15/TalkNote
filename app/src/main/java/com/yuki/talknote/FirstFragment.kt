@@ -56,8 +56,8 @@ class FirstFragment : Fragment() {
 
         val floatingActionButton = view.findViewById<FloatingActionButton>(R.id.fab)
         floatingActionButton.setOnClickListener{
-            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
-            addTalkViewModel.insert(Talk(0,date,"test"))
+//            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
+//            addTalkViewModel.insert(Talk(0,date,"test"))
             val intent = Intent(activity,TalkRecordActivity::class.java)
             startActivity(intent)
         }

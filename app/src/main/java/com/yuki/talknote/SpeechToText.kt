@@ -18,7 +18,6 @@ import java.util.*
 class SpeechToTextClient(val filename: String) {
     private val url = "https://speech.googleapis.com/v1/speech:recognize"
     private val apiKey = ""
-    private lateinit var addTalkViewModel: AddTalkViewModel
 
     fun recognitionStart():String{
         val recognized = StringBuilder()

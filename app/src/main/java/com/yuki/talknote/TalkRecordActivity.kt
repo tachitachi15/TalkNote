@@ -19,6 +19,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.lang.NumberFormatException
+import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.schedule
@@ -33,10 +34,11 @@ private const val DELIMITER_MAX_VOLUME = "max_volume: "
 class TalkRecordActivity : AppCompatActivity() {
     private var fileName: String = ""
     private var recorder: MediaRecorder? = null
-    private var player: MediaPlayer? = null
-
     private var permissionToRecordAccepted = false
     private var permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
+    private var timer = Timer()
+
+    private val keywordsRegistered = StringBuilder()
 
     private lateinit var addTalkViewModel: AddTalkViewModel
 
@@ -61,7 +63,7 @@ class TalkRecordActivity : AppCompatActivity() {
             setOutputFormat(MediaRecorder.OutputFormat.AMR_WB)
             setOutputFile(fileName)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
-            //setAudioSamplingRate(16000)
+            //なぜか8000Hzでサンプリングされてる　
 
             try {
                 prepare()
@@ -81,37 +83,32 @@ class TalkRecordActivity : AppCompatActivity() {
         }
         recorder = null
     }
+    private fun record(mStartRecording:Boolean){
+        if (mStartRecording) {
+            startRecording()
+            timer.schedule(10000,10000) {
+                stopRecording()
+                if (fileName.isNotEmpty()) {
+                    val output = ffmpeg(fileName)
+                    val maxVolume = getVolume(DELIMITER_MAX_VOLUME, output)
+                    val meanVolume = getVolume(DELIMITER_MEAN_VOLUME, output)
 
-    private fun onRecord(start: Boolean) = if (start) {
-//        Timer().schedule(30000){
-//            stopRecording()
-//        }
-        startRecording()
-    } else {
-        stopRecording()
-    }
-
-    private fun startPlaying() {
-        player = MediaPlayer().apply {
-            try {
-                setDataSource(fileName)
-                prepare()
-                start()
-            } catch (e: IOException) {
-                Log.e(LOG_TAG, "prepare() failed")
+                    if ((maxVolume != null) and (meanVolume != null) and (maxVolume!! > meanVolume!! + 20.0) and (meanVolume!! > -50)) {
+                        //盛り上がった会話と判定
+                        keywordsRegistered.append(SpeechToTextClient(fileName).recognitionStart())
+                    }
+                }
+                startRecording()
             }
         }
-    }
+        else{
+            stopRecording()
+            timer.cancel()
 
-    private fun stopPlaying() {
-        player?.release()
-        player = null
-    }
-
-    private fun onPlay(start: Boolean) = if (start) {
-        startPlaying()
-    } else {
-        stopPlaying()
+            addTalkViewModel = ViewModelProvider(this).get(AddTalkViewModel::class.java)
+            val date: String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
+            addTalkViewModel.insert(Talk(0,date,keywordsRegistered.toString()))
+        }
     }
 
     private fun getVolume(delimiter: String,output:String):Double?{
@@ -148,68 +145,22 @@ class TalkRecordActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
         val recordButton = findViewById<Button>(R.id.button_record)
-        val ffmpegButton = findViewById<Button>(R.id.button_ffmpeg)
-        val recognizeButton = findViewById<Button>(R.id.button_recognize)
-        val playButton = findViewById<Button>(R.id.button_playing)
 
-        val textMaxVolume = findViewById<TextView>(R.id.text_maxvolume)
-        val textMeanVolume =  findViewById<TextView>(R.id.text_meanvolume)
-        val textRecognition = findViewById<TextView>(R.id.text_recognition)
         var mStartRecording = true
-        var mStartPlaying = true
-
-        playButton.setOnClickListener{
-            onPlay(mStartPlaying)
-            playButton.text = when(mStartPlaying){
-                true -> "Stop"
-                false -> "Start"
-            }
-            mStartPlaying=!mStartPlaying
-        }
 
         recordButton.setOnClickListener{
-
-            onRecord(mStartRecording)
+            record(mStartRecording)
             recordButton.text = when(mStartRecording){
                 true -> "Stop Recording"
                 false -> "Start Recording"
             }
             mStartRecording=!mStartRecording
-            //textFFmpeg.text = ffmpeg(fileName)
         }
-
-        ffmpegButton.setOnClickListener{
-            if (fileName.isNotEmpty()) {
-                val output = ffmpeg(fileName)
-                val maxVolume = getVolume(DELIMITER_MAX_VOLUME, output)
-                val meanVolume = getVolume(DELIMITER_MEAN_VOLUME, output)
-
-                textMaxVolume.text = maxVolume.toString()
-                textMeanVolume.text = meanVolume.toString()
-            }else{
-                textMaxVolume.text = "file is not exist"
-            }
-        }
-
-        recognizeButton.setOnClickListener{
-            addTalkViewModel =  ViewModelProvider(this).get(AddTalkViewModel::class.java)
-            val date:String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
-//            SpeechToTextClient(fileName).recognitionStart()?.let{
-//                addTalkViewModel.insert(Talk(0,date,it))
-//            }
-            //mainスレッドで処理が重いと言われた
-            thread {
-                addTalkViewModel.insert(Talk(0,date,SpeechToTextClient(fileName).recognitionStart()))
-            }
-        }
-
     }
 
     override fun onStop() {
         super.onStop()
         recorder?.release()
         recorder = null
-//        player?.release()
-//        player = null
     }
 }

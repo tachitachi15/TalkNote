@@ -106,7 +106,7 @@ class TalkRecordActivity : AppCompatActivity() {
             timer.cancel()
 
             addTalkViewModel = ViewModelProvider(this).get(AddTalkViewModel::class.java)
-            val date: String = SimpleDateFormat("yyyy-MM-dd").format(Date()).toString()
+            val date: String = SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date()).toString()
             addTalkViewModel.insert(Talk(0,date,keywordsRegistered.toString()))
         }
     }

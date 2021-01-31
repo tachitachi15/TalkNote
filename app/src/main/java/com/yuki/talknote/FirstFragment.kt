@@ -13,6 +13,7 @@ import android.widget.Button
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -43,7 +44,9 @@ class FirstFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerview)
         val adapter = TalkListAdapter(context)
         val swipeToDismissTouchHelper = getSwipeToDismissTouchHelper(adapter)
+        val itemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
 
+        recyclerView.addItemDecoration(itemDecoration)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
